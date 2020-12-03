@@ -57,6 +57,28 @@ fn ruby(i: &str) -> IResult<&str, RubyElement> {
     Ok((i, RubyElement::new(rt, String::from(base_text))))
 }
 
+fn parser(mut data: &str) -> Vec<RubyElement> {
+    let mut results = Vec::new();
+    let it = std::iter::from_fn(move || {
+        match ruby(data) {
+            // when successful, a nom parser returns a tuple of
+            // the remaining input and the output value.
+            // So we replace the captured input data with the
+            // remaining input, to be parsed on the next call
+            Ok((i, o)) => {
+                data = i;
+                Some(o)
+            }
+            _ => None,
+        }
+    });
+
+    for i in it {
+        results.push(i);
+    }
+    results
+}
+
 fn rt(i: &str) -> IResult<&str, RubyElement> {
     let (i, (kanji, _, annotation)) = tuple((alphanumeric, tag("<rt>"), alphanumeric))(i)?;
     Ok((
@@ -114,6 +136,25 @@ mod tests {
         rt_dic.insert(base_text, rt);
         assert_eq!(ruby(text), Ok(("", RubyElement::Ruby(rt_dic))))
     }
+
+    #[test]
+    fn parser_test() {
+        let data = "<ruby>和<rt>わ</ruby>して<ruby>同<rt>どう</ruby>ぜず。";
+        assert_eq!(
+            parser(data),
+            vec![
+                RubyElement::new(
+                    RubyElement::RubyText("和".to_string(), "わ".to_string()),
+                    String::from("して")
+                ),
+                RubyElement::new(
+                    RubyElement::RubyText("同".to_string(), "どう".to_string()),
+                    String::from("ぜず。")
+                )
+            ]
+        )
+    }
+
     #[test]
     fn serialization_test() {
         let expected = "<ruby>同<rt>どう</ruby>ぜず。";
@@ -130,16 +171,6 @@ mod tests {
 }
 
 fn main() {
-    let text = "<ruby>同<rt>どう</ruby>ぜず。";
-    println!("Parsing ruby markup annotation");
-    println!("{:#?}", ruby(text));
-
-    println!("Serialization works too");
-    println!(
-        "{}",
-        RubyElement::new(
-            RubyElement::RubyText("同".to_string(), "どう".to_string()),
-            "ぜず。".to_string(),
-        ),
-    )
+    let data = "<ruby>和<rt>わ</ruby>して<ruby>同<rt>どう</ruby>ぜず。";
+    println!("{:#?}", parser(data));
 }
