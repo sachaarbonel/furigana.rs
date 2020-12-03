@@ -6,21 +6,22 @@ use nom::{
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
-enum Element {
-    Ruby(HashMap<String, Element>), //<ruby>RubyText</ruby>String
+enum RubyElement {
+    Ruby(HashMap<String, RubyElement>), //<ruby>RubyText</ruby>String
     RubyText(String),               //<rt>BaseText
 }
+// <ruby>同<rt>どう</ruby>ぜず。
 
-fn ruby(i: &str) -> IResult<&str, Element> {
+fn ruby(i: &str) -> IResult<&str, RubyElement> {
     let (i, (_, rt, _, base_text)) = tuple((tag("<ruby>"), rt, tag("</ruby>"), alphanumeric))(i)?;
     let mut dic = HashMap::new();
     dic.insert(String::from(base_text), rt);
-    Ok((i, Element::Ruby(dic)))
+    Ok((i, RubyElement::Ruby(dic)))
 }
 
-fn rt(i: &str) -> IResult<&str, Element> {
+fn rt(i: &str) -> IResult<&str, RubyElement> {
     let (i, (_, base_text)) = tuple((tag("<rt>"), alphanumeric))(i)?;
-    Ok((i, Element::RubyText(String::from(base_text))))
+    Ok((i, RubyElement::RubyText(String::from(base_text))))
 }
 
 fn alphanumeric(i: &str) -> IResult<&str, &str> {
@@ -52,9 +53,9 @@ mod tests {
 
     #[test]
     fn rt_test() {
-        //https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-element
+        //https://html.spec.whatwg.org/multipage/text-level-semantics.html#the-ruby-RubyElement
         let text = "<rt>どう";
-        assert_eq!(rt(text), Ok(("", Element::RubyText("どう".to_string()))))
+        assert_eq!(rt(text), Ok(("", RubyElement::RubyText("どう".to_string()))))
     }
 }
 
