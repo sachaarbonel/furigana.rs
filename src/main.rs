@@ -12,6 +12,14 @@ enum RubyElement {
     RubyText(String, String),           //kanji<rt>annotation
 }
 
+impl RubyElement {
+    fn new(rt: RubyElement, base_text: String) -> Self {
+        let dic: HashMap<String, RubyElement> = [(base_text, rt)].iter().cloned().collect();
+
+        RubyElement::Ruby(dic)
+    }
+}
+
 impl std::fmt::Display for RubyElement {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -45,9 +53,8 @@ impl std::fmt::Debug for RubyElement {
 
 fn ruby(i: &str) -> IResult<&str, RubyElement> {
     let (i, (_, rt, _, base_text)) = tuple((tag("<ruby>"), rt, tag("</ruby>"), alphanumeric))(i)?;
-    let mut rt_dic = HashMap::new();
-    rt_dic.insert(String::from(base_text), rt);
-    Ok((i, RubyElement::Ruby(rt_dic)))
+
+    Ok((i, RubyElement::new(rt, String::from(base_text))))
 }
 
 fn rt(i: &str) -> IResult<&str, RubyElement> {
@@ -126,14 +133,13 @@ fn main() {
     let text = "<ruby>同<rt>どう</ruby>ぜず。";
     println!("Parsing ruby markup annotation");
     println!("{:#?}", ruby(text));
-    let dic: HashMap<String, RubyElement> = [(
-        "ぜず。".to_string(),
-        RubyElement::RubyText("同".to_string(), "どう".to_string()),
-    )]
-    .iter()
-    .cloned()
-    .collect();
 
     println!("Serialization works too");
-    println!("{}", RubyElement::Ruby(dic),)
+    println!(
+        "{}",
+        RubyElement::new(
+            RubyElement::RubyText("同".to_string(), "どう".to_string()),
+            "ぜず。".to_string(),
+        ),
+    )
 }
