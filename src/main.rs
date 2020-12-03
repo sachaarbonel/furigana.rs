@@ -130,11 +130,17 @@ mod tests {
     #[test]
     fn ruby_test() {
         let text = "<ruby>同<rt>どう</ruby>ぜず。";
-        let base_text = String::from("ぜず。");
-        let rt = RubyElement::RubyText("同".to_string(), "どう".to_string());
-        let mut rt_dic = HashMap::new();
-        rt_dic.insert(base_text, rt);
-        assert_eq!(ruby(text), Ok(("", RubyElement::Ruby(rt_dic))))
+
+        assert_eq!(
+            ruby(text),
+            Ok((
+                "",
+                RubyElement::new(
+                    RubyElement::RubyText("同".to_string(), "どう".to_string()),
+                    String::from("ぜず。")
+                ),
+            ))
+        )
     }
 
     #[test]
