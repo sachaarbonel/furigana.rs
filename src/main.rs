@@ -4,11 +4,24 @@ use nom::{
     IResult,
 };
 use std::collections::HashMap;
+use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Clone)]
 enum RubyElement {
     Ruby(HashMap<String, RubyElement>), //<ruby>RubyText</ruby>baseText
     RubyText(String, String),           //kanji<rt>annotation
+}
+
+impl std::fmt::Display for RubyElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            RubyElement::RubyText(kanji, annotation) => write!(f, "{}<rt>{}", kanji, annotation),
+            RubyElement::Ruby(map) => {
+                let entry = map.iter().next().unwrap();
+                write!(f, "<ruby>{}</ruby>{}", entry.1, entry.0)
+            }
+        }
+    }
 }
 
 fn ruby(i: &str) -> IResult<&str, RubyElement> {
@@ -75,8 +88,31 @@ mod tests {
         rt_dic.insert(base_text, rt);
         assert_eq!(ruby(text), Ok(("", RubyElement::Ruby(rt_dic))))
     }
+    #[test]
+    fn serialization_test() {
+        let expected = "<ruby>同<rt>どう</ruby>ぜず。";
+        let dic: HashMap<String, RubyElement> = [(
+            "ぜず。".to_string(),
+            RubyElement::RubyText("同".to_string(), "どう".to_string()),
+        )]
+        .iter()
+        .cloned()
+        .collect();
+        let ruby = RubyElement::Ruby(dic);
+        assert_eq!(expected, ruby.to_string())
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
+    let text = "<ruby>同<rt>どう</ruby>ぜず。";
+    println!("{:#?}", ruby(text));
+    let dic: HashMap<String, RubyElement> = [(
+        "ぜず。".to_string(),
+        RubyElement::RubyText("同".to_string(), "どう".to_string()),
+    )]
+    .iter()
+    .cloned()
+    .collect();
+
+    println!("{}", RubyElement::Ruby(dic),)
 }
