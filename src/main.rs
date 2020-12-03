@@ -6,7 +6,7 @@ use nom::{
 use std::collections::HashMap;
 use std::fmt::Display;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 enum RubyElement {
     Ruby(HashMap<String, RubyElement>), //<ruby>RubyText</ruby>baseText
     RubyText(String, String),           //kanji<rt>annotation
@@ -19,6 +19,25 @@ impl std::fmt::Display for RubyElement {
             RubyElement::Ruby(map) => {
                 let entry = map.iter().next().unwrap();
                 write!(f, "<ruby>{}</ruby>{}", entry.1, entry.0)
+            }
+        }
+    }
+}
+
+impl std::fmt::Debug for RubyElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            RubyElement::RubyText(kanji, annotation) => f
+                .debug_struct("RubyText")
+                .field("kanji", kanji)
+                .field("annotation", annotation)
+                .finish(),
+            RubyElement::Ruby(map) => {
+                let entry = map.iter().next().unwrap();
+                f.debug_struct("Ruby")
+                    .field("ruby_text", entry.1)
+                    .field("base_text", entry.0)
+                    .finish()
             }
         }
     }
@@ -105,6 +124,7 @@ mod tests {
 
 fn main() {
     let text = "<ruby>同<rt>どう</ruby>ぜず。";
+    println!("Parsing ruby markup annotation");
     println!("{:#?}", ruby(text));
     let dic: HashMap<String, RubyElement> = [(
         "ぜず。".to_string(),
@@ -114,5 +134,6 @@ fn main() {
     .cloned()
     .collect();
 
+    println!("Serialization works too");
     println!("{}", RubyElement::Ruby(dic),)
 }
