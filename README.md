@@ -6,20 +6,7 @@ let text = "<ruby>同<rt>どう</ruby>ぜず。";
 
 ```
 
-# Serialization
-
-```rust
-  let dic: HashMap<String, RubyElement> = [(
-        "ぜず。".to_string(),
-        RubyElement::RubyText("同".to_string(), "どう".to_string()),
-    )]
-    .iter()
-    .cloned()
-    .collect();
-    let ruby = RubyElement::Ruby(dic);
-    ruby.to_string();
-
-```
+```bash
 Ok(
     (
         "",
@@ -32,5 +19,19 @@ Ok(
         },
     ),
 )
-Serialization works too
+```
+
+# Serialization
+
+```rust
+   let ruby = RubyElement::new(
+            RubyElement::RubyText("同".to_string(), "どう".to_string()),
+            "ぜず。".to_string(),
+        );
+    ruby.to_string();
+
+```
+
+```
 <ruby>同<rt>どう</ruby>ぜず。
+```
